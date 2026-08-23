@@ -18,11 +18,11 @@ function run(cmd) {
 mkdirSync(join(build, "icons"), { recursive: true });
 
 // أيقونة رئيسية 512
-run(`magick "${src}" -background none -resize 512 "${join(build, "icon.png")}"`);
+run(`magick -background none "${src}" -resize 512 "${join(build, "icon.png")}"`);
 
 // مجموعة hicolor للـ linux/flatpak/snap
 for (const s of sizes) {
-  run(`magick "${src}" -background none -resize ${s} "${join(build, "icons", `${s}.png`)}"`);
+  run(`magick -background none "${src}" -resize ${s} "${join(build, "icons", `${s}.png`)}"`);
 }
 
 // ويندوز .ico (متعدد الأحجام)

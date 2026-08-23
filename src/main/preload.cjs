@@ -22,6 +22,7 @@ const ALLOWED_INVOKE = new Set([
   "whatsapp:logout", "whatsapp:pairing",
   "backups:list", "backups:create", "backups:restore",
   "logs:list",
+  "system:factory-reset",
 ]);
 
 const ALLOWED_EVENTS = new Set([

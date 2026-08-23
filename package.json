@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-sticker-bot",
   "productName": "WhatsApp Sticker Bot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop manager for a WhatsApp sticker bot: persistent queue, quotas, crash recovery, dashboard",
   "type": "module",
   "main": "src/main/index.mjs",
