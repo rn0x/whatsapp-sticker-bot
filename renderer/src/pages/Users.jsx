@@ -2,13 +2,15 @@ import { useState, useCallback, useEffect } from "react";
 import { useApp } from "../ctx.js";
 import { useLiveData } from "../hooks/useLiveData.js";
 import { RefreshCw, Search, ArrowRight, Ban, ShieldCheck, RotateCcw, ImagePlus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
-// المستخدمون — بحث، تصنيف، حظر/فك حظر، تعديل الحصة، إرسال رسالة
 export default function UsersPage() {
   const { token } = useApp();
+  const { t } = useTranslation("ui");
   const [query, setQuery] = useState("");
   const [q, setQ] = useState(null);
-  const [expanded, setExpanded] = useState(null); // معرّف المستخدم المفتوح
+  const [expanded, setExpanded] = useState(null);
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState("list");
 
@@ -37,10 +39,10 @@ export default function UsersPage() {
     <div className="stack">
       <div className="toolbar">
         <label className="field inline grow">
-          <span><Search size={13} /> بحث</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="اسم، رقم، واتساب" />
+          <span><Search size={13} /> {t("بحث")}</span>
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("اسم، رقم، واتساب")} />
         </label>
-        <button className="btn" onClick={load}><RefreshCw size={14} /> تحديث</button>
+        <button className="btn" onClick={load}><RefreshCw size={14} /> {t("تحديث")}</button>
       </div>
 
       <section className="card">
@@ -48,7 +50,7 @@ export default function UsersPage() {
           <div className="tbl-wrap">
             <table className="tbl">
               <thead>
-                <tr><th>الاسم</th><th>الرقم</th><th>الحالة</th><th>الدور</th><th>الحصة</th><th>آخر نشاط</th><th>عدد المهام</th></tr>
+                <tr><th>{t("الاسم")}</th><th>{t("الرقم")}</th><th>{t("الحالة")}</th><th>{t("الدور")}</th><th>{t("الحصة")}</th><th>{t("آخر نشاط")}</th><th>{t("عدد المهام")}</th></tr>
               </thead>
               <tbody>
                 {(q?.rows || []).map((u) => (
@@ -64,7 +66,7 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </table>
-            {q?.total > 100 && <div className="muted-text pad">يوجد {q.total} مستخدم — حسّن البحث لعرضهم</div>}
+            {q?.total > 100 && <div className="muted-text pad">{t("يوجد {{n}} مستخدم — حسّن البحث لعرضهم", { n: q.total })}</div>}
           </div>
         </div>
       </section>
@@ -81,6 +83,7 @@ function UserQuickStats({ id, token }) {
 }
 
 function UserDetail({ user, token, onBack, onChanged }) {
+  const { t } = useTranslation("ui");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -101,43 +104,43 @@ function UserDetail({ user, token, onBack, onChanged }) {
   return (
     <div className="stack">
       <div className="toolbar">
-        <button className="btn" onClick={onBack}><ArrowRight size={14} /> رجوع</button>
-        <h3 style={{ margin: 0 }}>{user.name || user.push_name || "مستخدم"}</h3>
+        <button className="btn" onClick={onBack}><ArrowRight size={14} /> {t("رجوع")}</button>
+        <h3 style={{ margin: 0 }}>{user.name || user.push_name || t("مستخدم")}</h3>
         <span className="muted-text mono" style={{ direction: "ltr" }}>{user.phone}</span>
       </div>
 
       <section className="card">
         <div className="card-body user-grid">
-          <div><label>الحالة</label><Badge v={user.status} tone={user.status === "BLOCKED" ? "danger" : "ok"} /></div>
-          <div><label>الدور</label><Badge v={user.role} tone={user.role === "PREMIUM" ? "accent" : "muted"} /></div>
-          <div><label>الحصة اليومية</label><b>{user.quota_limit ?? 50}</b></div>
-          <div><label>مستعمل الآن</label><b>{user.quota?.used ?? 0}</b></div>
-          <div><label>إجمالي المهام</label><b>{user.stats?.total_jobs ?? 0}</b></div>
-          <div><label>نجحت</label><b>{user.stats?.successful ?? 0}</b></div>
-          <div><label>فشلت</label><b>{user.stats?.failed ?? 0}</b></div>
-          <div><label>آخر مهمة</label><b>{rel(user.stats?.last_job_at)}</b></div>
+          <div><label>{t("الحالة")}</label><Badge v={user.status} tone={user.status === "BLOCKED" ? "danger" : "ok"} /></div>
+          <div><label>{t("الدور")}</label><Badge v={user.role} tone={user.role === "PREMIUM" ? "accent" : "muted"} /></div>
+          <div><label>{t("الحصة اليومية")}</label><b>{user.quota_limit ?? 50}</b></div>
+          <div><label>{t("مستعمل الآن")}</label><b>{user.quota?.used ?? 0}</b></div>
+          <div><label>{t("إجمالي المهام")}</label><b>{user.stats?.total_jobs ?? 0}</b></div>
+          <div><label>{t("نجحت")}</label><b>{user.stats?.successful ?? 0}</b></div>
+          <div><label>{t("فشلت")}</label><b>{user.stats?.failed ?? 0}</b></div>
+          <div><label>{t("آخر مهمة")}</label><b>{rel(user.stats?.last_job_at)}</b></div>
         </div>
       </section>
 
       <section className="card">
-        <header className="card-head"><h3>إرسال رسالة</h3></header>
+        <header className="card-head"><h3>{t("إرسال رسالة")}</h3></header>
         <div className="card-body">
           <div className="row">
-            <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="نص الرسالة…" />
-            <button className="btn btn-primary" onClick={sendMessage} disabled={busy || !msg.trim()}>إرسال</button>
+            <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder={t("نص الرسالة…")} />
+            <button className="btn btn-primary" onClick={sendMessage} disabled={busy || !msg.trim()}>{t("إرسال")}</button>
           </div>
         </div>
       </section>
 
       <section className="card">
-        <header className="card-head"><h3>إجراءات</h3></header>
+        <header className="card-head"><h3>{t("إجراءات")}</h3></header>
         <div className="card-body row wrap">
           {user.status === "BLOCKED"
-            ? <button className="btn btn-ok" onClick={() => doAct("users:unblock")}><ShieldCheck size={14} /> فك الحظر</button>
-            : <button className="btn btn-danger" onClick={() => doAct("users:block", "تأكيد حظر المستخدم؟")}><Ban size={14} /> حظر</button>}
-          <button className="btn btn-warn" onClick={() => doAct("users:reset-quota", "إعادة تعيين الحصص؟")}><RotateCcw size={14} /> إعادة تعيين الحصة</button>
-          <button className="btn btn-ghost" onClick={() => doAct("users:send-media")}><ImagePlus size={14} /> إرسال وسائط…</button>
-          <button className="btn btn-danger" onClick={() => doAct("users:delete", "حذف المستخدم وجميع بياناته نهائياً؟")}><Trash2 size={14} /> حذف</button>
+            ? <button className="btn btn-ok" onClick={() => doAct("users:unblock")}><ShieldCheck size={14} /> {t("فك الحظر")}</button>
+            : <button className="btn btn-danger" onClick={() => doAct("users:block", t("تأكيد حظر المستخدم؟"))}><Ban size={14} /> {t("حظر")}</button>}
+          <button className="btn btn-warn" onClick={() => doAct("users:reset-quota", t("إعادة تعيين الحصة"))}><RotateCcw size={14} /> {t("إعادة تعيين الحصة")}</button>
+          <button className="btn btn-ghost" onClick={() => doAct("users:send-media")}><ImagePlus size={14} /> {t("إرسال وسائط…")}</button>
+          <button className="btn btn-danger" onClick={() => doAct("users:delete", t("حذف المستخدم وجميع بياناته نهائياً؟"))}><Trash2 size={14} /> {t("حذف")}</button>
         </div>
       </section>
     </div>
@@ -149,11 +152,13 @@ function Badge({ v, tone = "muted" }) {
 }
 
 function rel(d) {
+  const t = i18n.t;
   if (!d) return "—";
   const diff = Date.now() - new Date(d).getTime();
-  if (diff < 60000) return "الآن";
+  if (diff < 60000) return t("الآن");
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `قبل ${mins} د`;
+  if (mins < 60) return t("قبل {{n}} د", { n: mins });
   const h = Math.floor(mins / 60);
-  return `قبل ${h} س`;
+  if (h < 24) return t("قبل {{n}} س", { n: h });
+  return t("قبل {{n}} ي", { n: Math.floor(h / 24) });
 }

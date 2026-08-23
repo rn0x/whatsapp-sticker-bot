@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useApp } from "../ctx.js";
 import { useLiveData } from "../hooks/useLiveData.js";
 import { RefreshCw, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // المجموعات — قائمة، إدارة إعدادات كل مجموعة (mode/enabled/الحصة/الأدوار)
 const MODES = [
@@ -22,6 +23,7 @@ const MODE_HINTS = {
 
 export default function GroupsPage() {
   const { token } = useApp();
+  const { t } = useTranslation("ui");
   const [q, setQ] = useState(null);
   const [query, setQuery] = useState("");
 
@@ -41,24 +43,23 @@ export default function GroupsPage() {
     <div className="stack">
       <div className="toolbar">
         <label className="field inline grow">
-          <span><Search size={13} /> بحث</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="اسم المجموعة…" />
+          <span><Search size={13} /> {t("بحث")}</span>
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("اسم المجموعة…")} />
         </label>
-        <button className="btn" onClick={refresh}><RefreshCw size={14} /> تحديث من واتساب</button>
+        <button className="btn" onClick={refresh}><RefreshCw size={14} /> {t("تحديث من واتساب")}</button>
       </div>
 
       <div className="mode-legend">
         <details>
-          <summary className="mode-legend-summary"><span className="badge badge-info">شرح الأوضاع</span> كيف يعمل كل وضع؟</summary>
+          <summary className="mode-legend-summary"><span className="badge badge-info">{t("شرح الأوضاع")}</span> {t("كيف يعمل كل وضع؟")}</summary>
           <ul>
-            <li><b>تلقائي:</b> {MODE_HINTS.AUTO}</li>
-            <li><b>بالإشارة فقط:</b> {MODE_HINTS.MENTION_ONLY}</li>
-            <li><b>بالأمر فقط:</b> {MODE_HINTS.COMMAND_ONLY}</li>
-            <li><b>معطلة:</b> {MODE_HINTS.OFF}</li>
+            <li><b>{t("تلقائي:")}</b> {t(MODE_HINTS.AUTO)}</li>
+            <li><b>{t("بالإشارة فقط:")}</b> {t(MODE_HINTS.MENTION_ONLY)}</li>
+            <li><b>{t("بالأمر فقط:")}</b> {t(MODE_HINTS.COMMAND_ONLY)}</li>
+            <li><b>{t("معطلة:")}</b> {t(MODE_HINTS.OFF)}</li>
           </ul>
           <p className="muted-text">
-            الأوامر النصية تعمل في المجموعة بأي وضع: /help، /usage «حصتي»، /اضبط «حقوقي»، /فيديو، /صورة، /on، /off.
-            عند دخول البوت مجموعة جديدة يرسل رسالة تعريف مختصرة ويُسجَّل تلقائياً.
+            {t("الأوامر النصية تعمل في المجموعة بأي وضع: /help، /usage «حصتي»، /اضبط «حقوقي»، /فيديو، /صورة، /on، /off. عند دخول البوت مجموعة جديدة يرسل رسالة تعريف مختصرة ويُسجَّل تلقائياً.")}
           </p>
         </details>
       </div>
@@ -67,12 +68,12 @@ export default function GroupsPage() {
         <div className="card-body">
           <div className="tbl-wrap">
             <table className="tbl">
-              <thead><tr><th>المجموعة</th><th>المعرّف</th><th>الأعضاء</th><th>الوضع</th><th>التفعيل</th><th>الحصة اليومية</th><th>الأدوار المسموحة</th></tr></thead>
+              <thead><tr><th>{t("المجموعة")}</th><th>{t("المعرّف")}</th><th>{t("الأعضاء")}</th><th>{t("الوضع")}</th><th>{t("التفعيل")}</th><th>{t("الحصة اليومية")}</th><th>{t("الأدوار المسموحة")}</th></tr></thead>
               <tbody>
-                {(q?.rows || []).map((g) => <GroupRow key={g.groupId ?? g.group_id} g={g} token={token} onChanged={load} />)}
+                {(q?.rows || []).map((g) => <GroupRow key={g.groupId ?? g.group_id} g={g} token={token} onChanged={load} t={t} />)}
               </tbody>
             </table>
-            {!q?.rows?.length && <div className="empty">لا توجد مجموعات بعد</div>}
+            {!q?.rows?.length && <div className="empty">{t("لا توجد مجموعات بعد")}</div>}
           </div>
         </div>
       </section>
@@ -80,7 +81,7 @@ export default function GroupsPage() {
   );
 }
 
-function GroupRow({ g, token }) {
+function GroupRow({ g, token, t }) {
   const [settings, setSettings] = useState(null);
   const [dailyStr, setDailyStr] = useState("");
   const [saveErr, setSaveErr] = useState("");
@@ -97,7 +98,6 @@ function GroupRow({ g, token }) {
 
   async function save(key, value) {
     setSaveErr("");
-    // تحديث تفاؤلي فوري — الواجهة لا تنتظر الخادم كي لا تبقى "ثابتة".
     setSettings((prev) => {
       const base = prev || {};
       const next = { ...base, [key]: value };
@@ -109,30 +109,29 @@ function GroupRow({ g, token }) {
       setSettings(r.settings);
       setDailyStr(r.settings.daily_limit != null ? r.settings.daily_limit : (r.settings.dailyLimit ?? ""));
     } else {
-      setSaveErr(r?.error || "فشل الحفظ");
-      loadSettings(); // إعادة القراءة الفعلية (تراجع عن التفاؤلي)
+      setSaveErr(r?.error || t("فشل الحفظ"));
+      loadSettings();
     }
   }
 
-  // التخزين يعيد enabled كعدد صحيح (0/1) أو منطقي — نطبّعه بأمان للعرض.
   const enabled = settings == null || settings.enabled === 1 || settings.enabled === true;
 
   return (
     <tr>
-      <td><b>{g.name || "بدون اسم"}</b></td>
+      <td><b>{g.name || t("بدون اسم")}</b></td>
       <td className="muted" style={{ direction: "ltr" }}>{g.groupId ?? g.group_id}</td>
       <td>{g.memberCount ?? "?"}</td>
       <td>
         <select value={settings?.mode || "MENTION_ONLY"} onChange={(e) => save("mode", e.target.value)}
-          title={MODE_HINTS[settings?.mode] || ""}>
-          {MODES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          title={t(MODE_HINTS[settings?.mode] || "")}>
+          {MODES.map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
         </select>
       </td>
       <td>
         <label className="toggle switch" style={{ cursor: "pointer" }}>
           <input type="checkbox" checked={enabled} onChange={(e) => save("enabled", e.target.checked)} />
           <span className="track" aria-hidden="true" />
-          <span className={enabled ? "lbl-on" : "lbl-off"}>{enabled ? "مفعّلة" : "معطلة"}</span>
+          <span className={enabled ? "lbl-on" : "lbl-off"}>{enabled ? t("مفعّلة") : t("معطلة")}</span>
         </label>
       </td>
       <td>
@@ -142,7 +141,7 @@ function GroupRow({ g, token }) {
           onChange={(e) => setDailyStr(e.target.value)}
           onBlur={() => { const n = Number(dailyStr); if (dailyStr !== "" && Number.isFinite(n) && n >= 0) save("daily_limit", Math.round(n)); }}
           onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-          style={{ width: 80 }} placeholder="بلا حد"
+          style={{ width: 80 }} placeholder={t("بلا حد")}
         />
       </td>
       <td>

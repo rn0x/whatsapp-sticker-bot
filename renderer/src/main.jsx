@@ -4,27 +4,30 @@ import "./styles.css";
 import { api, AppCtx, useApp } from "./ctx.js";
 import { LogoMark } from "./components.jsx";
 import Titlebar from "./Titlebar.jsx";
+import { useTranslation } from "react-i18next";
+import i18n, { setLang } from "./i18n";
 import {
   LayoutDashboard, ListOrdered, Users, MessagesSquare, BarChart3,
-  MessageCircle, ScrollText, DatabaseBackup, Settings, LogOut, MessageSquareText,
+  MessageSquareText, MessageCircle, ScrollText, DatabaseBackup, Settings, LogOut, Globe,
 } from "lucide-react";
 
 // حالات WhatsApp
 const WA_STATES = {
-  CONNECTED: { label: "متصل", color: "#22c55e" },
-  CONNECTING: { label: "جارٍ الاتصال...", color: "#eab308" },
-  AUTHENTICATING: { label: "بانتظار المسح", color: "#eab308" },
-  DISCONNECTED: { label: "غير متصل", color: "#ef4444" },
-  LOGOUT: { label: "تسجيل خروج", color: "#ef4444" },
+  CONNECTED: { color: "#22c55e" },
+  CONNECTING: { color: "#eab308" },
+  AUTHENTICATING: { color: "#eab308" },
+  DISCONNECTED: { color: "#ef4444" },
+  LOGOUT: { color: "#ef4444" },
 };
 
 // ===== مكوّن أساسي: بطاقة =====
 function Card({ title, children, actions, className = "" }) {
+  const { t } = useTranslation("ui");
   return (
     <section className={`card ${className}`}>
       {(title || actions) && (
         <header className="card-head">
-          <h3>{title}</h3>
+          <h3>{title ? t(title) : null}</h3>
           {actions && <div className="card-actions">{actions}</div>}
         </header>
       )}
@@ -43,20 +46,20 @@ function StatusBadge({ status }) {
     QUEUED: "info", PROCESSING: "warn", SENDING: "accent",
     COMPLETED: "ok", FAILED: "danger", CANCELLED: "muted", STALE: "danger",
     ACTIVE: "ok", BLOCKED: "danger", PREMIUM: "accent", REGULAR: "muted",
-    CONNECTED: "ok", CONNECTING: "warn", AUTHENTICATING: "warn",
-    DISCONNECTED: "danger", LOGOUT: "danger",
   };
   return <Badge tone={tones[status] || "muted"}>{status}</Badge>;
 }
 
 // ===== جدول =====
-function Tbl({ cols, rows, render, empty = "لا توجد بيانات" }) {
-  if (!rows || rows.length === 0) return <div className="empty">{empty}</div>;
+function Tbl({ cols, rows, render, empty }) {
+  const { t } = useTranslation("ui");
+  const label = empty || t("لا توجد بيانات");
+  if (!rows || rows.length === 0) return <div className="empty">{label}</div>;
   return (
     <div className="tbl-wrap">
       <table className="tbl">
         <thead>
-          <tr>{cols.map((c) => <th key={c.key}>{c.label}</th>)}</tr>
+          <tr>{cols.map((c) => <th key={c.key}>{t(c.label)}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
@@ -79,11 +82,12 @@ function Btn({ children, onClick, tone = "", disabled, title }) {
 
 // ===== فورم عام =====
 function Field({ label, children, hint }) {
+  const { t } = useTranslation("ui");
   return (
     <label className="field">
-      <span>{label}</span>
+      <span>{t(label)}</span>
       {children}
-      {hint && <small>{hint}</small>}
+      {hint && <small>{t(hint)}</small>}
     </label>
   );
 }
@@ -91,7 +95,7 @@ function Field({ label, children, hint }) {
 // ===== أداة أرقام =====
 // أرقام إنجليزية واضحة (u-nu-latn) مع تنسيق عربي (حسب دراسة المراجعة).
 function fmtNum(n) {
-  return new Intl.NumberFormat("ar-EG-u-nu-latn").format(n || 0);
+  return new Intl.NumberFormat(i18n.language === "en" ? "en" : "ar-EG-u-nu-latn").format(n || 0);
 }
 function fmtBytes(n) {
   if (!n) return "0 B";
@@ -103,17 +107,26 @@ function fmtBytes(n) {
 function fmtTime(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleString("ar-EG-u-nu-latn");
+  return d.toLocaleString(i18n.language === "en" ? "en" : "ar-EG-u-nu-latn");
 }
 function relTime(iso) {
+  const { t } = translationRef;
   if (!iso) return "—";
   const diff = Date.now() - new Date(iso).getTime();
-  if (diff < 60000) return "الآن";
+  if (diff < 60000) return t("الآن");
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `قبل ${mins} د`;
+  if (mins < 60) return t("قبل {{n}} د", { n: mins });
   const h = Math.floor(mins / 60);
-  if (h < 24) return `قبل ${h} س`;
-  return `قبل ${Math.floor(h / 24)} ي`;
+  if (h < 24) return t("قبل {{n}} س", { n: h });
+  return t("قبل {{n}} ي", { n: Math.floor(h / 24) });
+}
+
+// نستخدم مرجع ترجمة مشترك للدوال المساعدة خارج مكوّن React.
+const translationRef = { t: (k) => k };
+function SyncTranslation() {
+  const { t } = useTranslation("ui");
+  translationRef.t = t;
+  return null;
 }
 
 // ===== ===== ===== الهيكل العام ===== ===== =====
@@ -143,18 +156,47 @@ const NAV = [
   { key: "settings", label: "الإعدادات", icon: Settings },
 ];
 
+// بوّابة اختيار اللغة عند أول تشغيل (قبل تسجيل الدخول).
+function LanguageGate({ value, onPick }) {
+  const { t } = useTranslation("ui");
+  return (
+    <div className="boot-wrap lang-gate">
+      <div className="lang-gate-card">
+        <div className="brand" style={{ justifyContent: "center", marginBottom: 18 }}>
+          <span className="brand-mark"><LogoMark size={40} /></span>
+          <div><b>Sticker Bot</b><small>{t("مصنع الملصقات")}</small></div>
+        </div>
+        <h2>{t("اختر لغة الواجهة")}</h2>
+        <p className="muted-text center">{t("يمكنك تغيير اللغة لاحقاً من الإعدادات.")}</p>
+        <div className="lang-options">
+          <button className={`lang-opt ${value === "ar" ? "active" : ""}`} onClick={() => onPick("ar")}>
+            <span className="lang-name">العربية</span>
+            <span className="lang-sub">Arabic</span>
+          </button>
+          <button className={`lang-opt ${value === "en" ? "active" : ""}`} onClick={() => onPick("en")}>
+            <span className="lang-name">English</span>
+            <span className="lang-sub">الإنجليزية</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const { t } = useTranslation("ui");
   const [page, setPage] = useState("dashboard");
   const [overview, setOverview] = useState(null);
   const [wa, setWa] = useState({ status: "DISCONNECTED" });
   const [token, setToken] = useState(null);
-  const [authState, setAuthState] = useState({ configured: false, requireLogin: true, done: false });
+  const [authState, setAuthState] = useState({ configured: false, requireLogin: true, done: false, language: null });
+  const [gateLang, setGateLang] = useState("ar");
 
   // المصادقة
   useEffect(() => {
     const saved = localStorage.getItem("sb_token");
     if (saved) setToken(saved);
-    api.invoke("auth:status").then((r) => setAuthState({ configured: r.configured, requireLogin: r.requireLogin, done: true }));
+    api.invoke("auth:status").then((r) => setAuthState({ configured: r.configured, requireLogin: r.requireLogin, done: true, language: r.language || null }));
   }, []);
 
   // السلوك الأصلي للتطبيق: منع قائمة السياق الافتراضية (فحص/نسخ) خارج الحقول.
@@ -177,7 +219,6 @@ function App() {
     return () => offs.forEach((f) => f());
   }, []);
 
-  // اعتماداسجل الدخول
   const login = useCallback(async (password) => {
     const r = await api.invoke("auth:login", { password });
     if (r.ok && r.token) { localStorage.setItem("sb_token", r.token); setToken(r.token); return { ok: true }; }
@@ -188,7 +229,7 @@ function App() {
     if (r.ok && r.token) {
       localStorage.setItem("sb_token", r.token);
       setToken(r.token);
-      setAuthState({ configured: true, done: true });
+      setAuthState((s) => ({ ...s, configured: true, done: true }));
     }
     return r;
   }, []);
@@ -197,6 +238,13 @@ function App() {
     localStorage.removeItem("sb_token");
     setToken(null);
   }, [token]);
+
+  async function pickGateLang(lang) {
+    setGateLang(lang);
+    setLang(lang);
+    try { await api.invoke("app:set-language", { value: lang }); } catch { /* تجاهل */ }
+    setAuthState((s) => ({ ...s, language: lang }));
+  }
 
   const ctx = useMemo(() => ({
     token, overview, wa, setWa, page, setPage, login, setup, logout,
@@ -210,9 +258,19 @@ function App() {
   if (!authState.done) return (
     <div className="boot-wrap">
       <Titlebar />
-      <div className="boot">جارٍ التحميل…</div>
+      <div className="boot">{t("جارٍ التحميل…")}</div>
     </div>
   );
+
+  // بوّابة اللغة عند أول تشغيل (لا لغة محددة بعد).
+  if (authState.language == null) {
+    return (
+      <div className="boot-wrap">
+        <Titlebar />
+        <LanguageGate value={gateLang} onPick={pickGateLang} />
+      </div>
+    );
+  }
 
   // إذا كان تسجيل الدخول غير مفعّل، نفتح لوحة التحكم مباشرةً بدون رمز
   const noLogin = authState.requireLogin === false;
@@ -230,6 +288,7 @@ function App() {
 
   return (
     <AppCtx.Provider value={ctx}>
+      <SyncTranslation />
       <Titlebar />
       <div className="app">
         <aside className="sidebar">
@@ -237,7 +296,7 @@ function App() {
             <span className="brand-mark"><LogoMark size={36} /></span>
             <div>
               <b>Sticker Bot</b>
-              <small>مصنع الملصقات</small>
+              <small>{t("مصنع الملصقات")}</small>
             </div>
           </div>
           <nav>
@@ -246,7 +305,7 @@ function App() {
               return (
                 <button key={n.key} className={`nav-item ${n.key === page ? "active" : ""}`} onClick={() => setPage(n.key)}>
                   <span className="nav-icon"><Icon size={17} strokeWidth={2.2} /></span>
-                  {n.label}
+                  {t(n.label)}
                 </button>
               );
             })}
@@ -255,27 +314,27 @@ function App() {
             <span className="wa-chip">
               <StatusBadge status={overview?.whatsapp || "DISCONNECTED"} />
             </span>
-            {token && <Btn tone="ghost" onClick={logout}><LogOut size={14} /> خروج</Btn>}
+            {token && <Btn tone="ghost" onClick={logout}><LogOut size={14} /> {t("خروج")}</Btn>}
           </div>
         </aside>
         <main className="main">
           <header className="topbar">
             <div>
-              <div className="topbar-eyebrow">مصنع الملصقات — خلف الكواليس</div>
-              <h1>{NAV.find((n) => n.key === page)?.label}</h1>
+              <div className="topbar-eyebrow">{t("مصنع الملصقات — خلف الكواليس")}</div>
+              <h1>{t(NAV.find((n) => n.key === page)?.label)}</h1>
             </div>
             <div className="topbar-metrics">
               <span className="metric">
-                <b>{overview?.queueSize ?? "…"}</b> في الانتظار
+                <b>{overview?.queueSize ?? "…"}</b> {t("في الانتظار")}
               </span>
               <span className="metric">
-                <b>{overview?.processingNow ?? "…"}</b> قيد المعالجة
+                <b>{overview?.processingNow ?? "…"}</b> {t("قيد المعالجة")}
               </span>
               <span className="metric">
-                <b>{fmtNum(overview?.users?.active)}</b> مستخدم نشط
+                <b>{fmtNum(overview?.users?.active)}</b> {t("مستخدم نشط")}
               </span>
               <span className="metric">
-                <b>{overview?.jobsToday ?? "…"}</b> مهمة اليوم
+                <b>{overview?.jobsToday ?? "…"}</b> {t("مهمة اليوم")}
               </span>
             </div>
           </header>

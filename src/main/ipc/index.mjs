@@ -1,8 +1,21 @@
 // IPC Hub — جميع قنوات window.api محجوزة هنا مع فحص الصلاحيات لكل قناة.
 // الأمان: كل قناة ترفض المكالمات غير المسموحة سابقاً من preload، والمعالجات تتحقق من المصادقة.
 import { resolve } from "node:path";
+import { lookupApp, DEFAULT_LANG } from "../../../shared/i18n/index.mjs";
 
-const PUBLIC_CHANNELS = new Set(["auth:status", "auth:login", "auth:setup", "theme:get", "window:minimize", "window:toggle-maximize", "window:close"]);
+const PUBLIC_CHANNELS = new Set(["auth:status", "auth:login", "auth:setup", "theme:get", "window:minimize", "window:toggle-maximize", "window:close", "app:set-language"]);
+
+// يترجم أي نصّ خطأ/رسالة عائد للواجهة حسب لغة التطبيق الحالية.
+function getLang(services) {
+  return services?.settings?.get?.("app.language") || DEFAULT_LANG;
+}
+function translateResult(result, lang) {
+  if (result && typeof result === "object") {
+    if (typeof result.error === "string") result.error = lookupApp(lang, result.error);
+    if (typeof result.message === "string") result.message = lookupApp(lang, result.message);
+  }
+  return result;
+}
 
 // قائمة مفاتيح الإعدادات القابلة للتعديل من الواجهة فقط (يُقيّد النطاق).
 const EDITABLE_SETTINGS = new Set([
@@ -36,17 +49,18 @@ export class IpcHub {
     const { ipcMain, services: s } = this;
 
     const def = (channel, fn) => ipcMain.handle(channel, async (event, payload = {}) => {
+      const lang = getLang(s);
       try {
         if (!PUBLIC_CHANNELS.has(channel) && s.admin.loginRequired()) {
           const token = payload?.token;
           if (!token || !s.admin.requireAuth(token)) {
-            return { ok: false, error: "غير مصرّح: سجّل الدخول أولاً", code: "UNAUTHORIZED" };
+            return translateResult({ ok: false, error: "غير مصرّح: سجّل الدخول أولاً", code: "UNAUTHORIZED" }, lang);
           }
         }
-        return await fn(payload, event);
+        return translateResult(await fn(payload, event), lang);
       } catch (err) {
         s.logger?.error?.("ipc", `${channel} failed`, { err: err.message });
-        return { ok: false, error: err.message || "خطأ غير متوقع", code: err.code || "ERROR" };
+        return translateResult({ ok: false, error: err.message || "خطأ غير متوقع", code: err.code || "ERROR" }, lang);
       }
     });
 
@@ -66,12 +80,20 @@ export class IpcHub {
       ok: true,
       configured: s.admin.isConfigured(),
       requireLogin: s.admin.loginRequired(),
+      language: s.settings.get("app.language") || null,
     }));
 
     def("theme:get", () => ({
       ok: true,
       theme: s.settings.get("app.theme") || "dark",
     }));
+
+    // ضبط لغة الواجهة في أول تشغيل (قبل تسجيل الدخول) — آمن ومقصور على ar/en.
+    def("app:set-language", ({ value }) => {
+      if (value !== "ar" && value !== "en") return translateResult({ ok: false, error: "قيمة غير مسموحة" }, lang);
+      s.settings.set("app.language", value);
+      return { ok: true };
+    });
 
     def("auth:login", ({ password }) => {
       if (!s.admin.verify(password)) return { ok: false, error: "كلمة المرور غير صحيحة" };

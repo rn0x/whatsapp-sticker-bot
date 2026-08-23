@@ -2,7 +2,7 @@
 // الخصوصية: ردود قصيرة فقط؛ لا يرسل أي Media أو محتوى رسائل.
 // السلوك: ردود متنوعة عبر Humanizer (صيغ متناوبة، إشارة كتابة، تأخير إنساني).
 
-import { BOT_TEXTS } from "./humanizer.mjs";
+import { BOT_TEXTS, botText } from "./humanizer.mjs";
 
 const e = (arr) => arr[0];
 
@@ -25,6 +25,12 @@ export class BotManager {
     this.botJid = null;
     this.botDigits = null;
     this._started = false;
+  }
+
+  // يحلّ لغة الردود: لغة المستخدم المفضّلة، وإلا لغة التطبيق، وإلا عربية.
+  resolveLang(userId) {
+    const code = this.users?.getLang?.(userId) || this.settings?.get?.("app.language");
+    return code === "en" ? "en" : "ar";
   }
 
   start() {
@@ -124,7 +130,7 @@ export class BotManager {
     this.groups.upsertGroup(p.chatId, { name });
     this.groups.markBotWelcomed(p.chatId);
 
-    const text = msgFromVariants("groupWelcome", isBotAdmin, mode);
+    const text = this.msgVariants(this.resolveLang(null), "groupWelcome", isBotAdmin, mode);
     await this.trySendWithTyping(p.chatId, text, null);
     this.logger.info("bot", "bot joined group + welcomed", { chatId: p.chatId, mode, isBotAdmin });
   }
@@ -187,7 +193,7 @@ export class BotManager {
     const limit = this.settings.getNumber("quota.defaultDailyQuota", 50);
     const user = this.users.getByWhatsAppId(userWhatsAppId);
     await this.humanDelay(chatId);
-    const text = msgFromVariants("welcome", pushName || "", limit);
+    const text = this.msgVariants(this.resolveLang(user?.id), "welcome", pushName || "", limit);
     await this.trySendWithTyping(chatId, text, user?.id || null);
   }
 
@@ -203,6 +209,7 @@ export class BotManager {
     image: ["/image", "image", "صورة", "الصور", "صوره", "صور", "الصور", "الصورة"],
     group: ["/group", "group", "القروب", "المجموعة", "المجموعات", "طريقة القروب", "وضع القروب"],
     author: ["/author", "author", "مؤلف", "المؤلف", "المؤلفة", "اسم المؤلف", "كاتب", "الناشر"],
+    lang: ["/lang", "lang", "لغة", "اللغة", "اللغه", "لغه"],
     pack: ["/pack", "pack", "/name", "باك", "الباك", "الباقة", "اسم", "/اسم", "اسم الملصقات", "عنوان الملصقات", "اسم الاستيكر", "اسم الباك", "كلمة الباك"],
   };
 
@@ -238,10 +245,10 @@ export class BotManager {
     const { cmd } = parsed;
     const rest = parsed.rest.toLowerCase();
     const inGroup = ctx === "group";
+    const lang = this.resolveLang(user?.id);
     const pickText = (key, ...args) => {
-      const item = BOT_TEXTS[key];
-      const variants = typeof item === "function" ? item(...args) : item;
-      return this.humanizer?.pick?.(key, variants) ?? e(variants);
+      const variants = botText(lang, key, ...args);
+      return this.humanizer?.pick?.(key, variants) ?? (Array.isArray(variants) ? variants[0] : "");
     };
 
     let text = "";
@@ -333,6 +340,15 @@ export class BotManager {
           text = pickText("authorSet", val);
           break;
         }
+        case "lang": {
+          const want = (parsed.rest || "").trim().toLowerCase();
+          const code = want === "en" || want === "انجليزي" || want === "english" ? "en" : "ar";
+          this.users.setLang(user.id, code);
+          text = code === "en"
+            ? "تم ضبط اللغة على الإنجليزية. ستأتي ردودي بالإنجليزية من الآن."
+            : "تم ضبط اللغة على العربية. ستأتي ردودي بالعربية من الآن.";
+          break;
+        }
       }
     } catch (err) {
       this.logger.warn("bot", "command failed", { err: err.message, cmd });
@@ -375,14 +391,14 @@ export class BotManager {
     //    تحويل تلقائي مفعل؟ وهل يسمح بهذا النوع أصلاً؟
     const prefs = this.users.getPrefs(user.id);
     if (prefs?.autoConvert === false) {
-      await this.trySendWithTyping(chatId, msgFromVariants("autoOffReply"), user.id);
+      await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "autoOffReply"), user.id);
       return;
     }
     const wantVideo = msg.media.type === "video";
     if (prefs && (wantVideo ? prefs.allowVideo === false : prefs.allowImage === false)) {
       const text = wantVideo
-        ? msgFromVariants("videoOffReply")
-        : msgFromVariants("imageOffReply");
+        ? this.msgVariants(this.resolveLang(user?.id), "videoOffReply")
+        : this.msgVariants(this.resolveLang(user?.id), "imageOffReply");
       await this.trySendWithTyping(chatId, text, user.id);
       return;
     }
@@ -393,7 +409,7 @@ export class BotManager {
       windowMs: 60_000,
     });
     if (!rl.allowed) {
-      await this.trySendWithTyping(chatId, msgFromVariants("rateLimited"), user.id);
+      await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "rateLimited"), user.id);
       return;
     }
     const grl = this.rateLimiter.hit("global", {
@@ -401,7 +417,7 @@ export class BotManager {
       windowMs: 60_000,
     });
     if (!grl.allowed) {
-      await this.trySendWithTyping(chatId, msgFromVariants("queueFull"), user.id);
+      await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "queueFull"), user.id);
       return;
     }
 
@@ -421,19 +437,19 @@ export class BotManager {
     if (!res.ok) {
       if (res.code === "duplicate") return; // نفس الرسالة تتكرر في الحدث
       if (res.code === "quota_exceeded") {
-        await this.trySendWithTyping(chatId, msgFromVariants("quotaExhausted"), user.id);
+        await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "quotaExhausted"), user.id);
         return;
       }
       if (res.code === "max_pending") {
-        await this.trySendWithTyping(chatId, msgFromVariants("maxPending"), user.id);
+        await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "maxPending"), user.id);
         return;
       }
       if (res.code === "queue_paused") {
-        await this.trySendWithTyping(chatId, msgFromVariants("paused"), user.id);
+        await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "paused"), user.id);
         return;
       }
       if (res.code === "queue_full") {
-        await this.trySendWithTyping(chatId, msgFromVariants("queueFull"), user.id);
+        await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), "queueFull"), user.id);
         return;
       }
       return;
@@ -444,7 +460,7 @@ export class BotManager {
 
     // 3) إشعار البدء — صيغة متناوبة حسب النوع
     const ackKey = type === "VIDEO" ? "ackVideo" : "ackImage";
-    await this.trySendWithTyping(chatId, msgFromVariants(ackKey), user.id);
+    await this.trySendWithTyping(chatId, this.msgVariants(this.resolveLang(user?.id), ackKey), user.id);
   }
 
   async handleGroupMessage(msg, user) {
@@ -475,7 +491,7 @@ export class BotManager {
     // 2) رسالة نصية بدون وسائط: إن وُجهت للبوت (إشارة/اسم/كلمة) نوضّح المطلوب.
     if (!isMedia) {
       if (this.isMentioned(msg) || this.isCommandForBot(msg)) {
-        await this.trySendWithTyping(msg.chatId, msgFromVariants("groupNeedMedia"), user.id);
+        await this.trySendWithTyping(msg.chatId, this.msgVariants(this.resolveLang(user?.id), "groupNeedMedia"), user.id);
       } else {
         this.logger.info("bot", "group drop: not-media", { chatId: msg.chatId, type: msg.media?.type || msg.rawType || null });
       }
@@ -661,13 +677,12 @@ export class BotManager {
     const ranks = { USER: 0, PREMIUM: 10, ADMIN: 20 };
     return (ranks[user.role] || 0) + (user.priority || 0);
   }
-}
 
-function msgFromVariants(key, ...args) {
-  const item = BOT_TEXTS[key];
-  if (!item) return "";
-  const variants = typeof item === "function" ? item(...args) : item;
-  return variants[0];
+  // يسترجع صيغة واحدة من صيغ مفتاح بلغة معيّنة، عبر تناوب Humanizer.
+  msgVariants(lang, key, ...args) {
+    const variants = botText(lang, key, ...args);
+    return this.humanizer?.pick?.(key, variants) ?? (Array.isArray(variants) ? variants[0] : "");
+  }
 }
 
 function normalizeJid(jid) {

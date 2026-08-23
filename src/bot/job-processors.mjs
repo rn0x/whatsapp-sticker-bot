@@ -6,7 +6,7 @@ import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { sha256 } from "../utils/time.mjs";
 import { applyStickerMetadata } from "../media/sticker-meta.mjs";
-import { BOT_TEXTS } from "./humanizer.mjs";
+import { BOT_TEXTS, botText } from "./humanizer.mjs";
 
 export function createJobHandlers({ adapter, queue, quota, users, groups, settings, logger, paths, cache, mediaEngine, validator, humanizer, messages }) {
   return {
@@ -28,6 +28,7 @@ export function createJobHandlers({ adapter, queue, quota, users, groups, settin
 
     async process(job) {
       const user = users.getById(job.userId);
+      const lang = users.getLang?.(user?.id) || settings.get("app.language") || "ar";
       if (!user) throw new Error("user not found");
       const chatId = job.groupId || user.whatsappId;
       const userForQuota = { id: user.id, role: user.role, quotaLimit: user.quotaLimit, quotaMode: user.quotaMode };
@@ -50,7 +51,7 @@ export function createJobHandlers({ adapter, queue, quota, users, groups, settin
       } else {
         const validation = await validator.validate(job, job.type);
         if (!validation.ok) {
-          await notifyInvalid(adapter, chatId, validation.reason, user, messages);
+          await notifyInvalid(adapter, chatId, validation.reason, user, messages, lang);
           throw permanentError(validation.reason);
         }
         let resolved;
@@ -61,7 +62,7 @@ export function createJobHandlers({ adapter, queue, quota, users, groups, settin
           if (err?.permanent) {
             const reason = String(err.message).split(":")[0];
             if (INVALID_MESSAGES[reason]) {
-              await notifyInvalid(adapter, chatId, reason, user, messages);
+              await notifyInvalid(adapter, chatId, reason, user, messages, lang);
             }
             throw permanentError(reason);
           }
@@ -117,7 +118,7 @@ export function createJobHandlers({ adapter, queue, quota, users, groups, settin
 
       // إشعار النجاح — صيغة متناوبة، لا رسالة مكررة.
       try {
-        const variants = BOT_TEXTS.done;
+        const variants = botText(lang, "done");
         const text = humanizer?.pick?.("done", variants) ?? variants[0];
         const done = await adapter.sendText(chatId, text);
         messages?.insert({ userId: user.id, chatId, direction: "OUT", type: "text", text, messageId: done?.id?._serialized || done?.id?.$1 || done?.id?.id || null, jobId: job.id, adminSent: false });
@@ -140,10 +141,11 @@ const INVALID_MESSAGES = {
   animated_sticker_too_large: "animated_sticker_too_large",
 };
 
-async function notifyInvalid(adapter, chatId, reason, user = null, messages = null) {
+async function notifyInvalid(adapter, chatId, reason, user = null, messages = null, lang = "ar") {
   try {
     const key = String(reason).split(":")[0];
-    const text = BOT_TEXTS.invalid[key] || "لا يمكن معالجة هذا الملف حالياً.";
+    const table = botText(lang, "invalid");
+    const text = table[key] || table.unsupported_file;
     const sent = await adapter.sendText(chatId, text);
     if (messages && user) {
       messages.insert({ userId: user.id, chatId, direction: "OUT", type: "text", text, messageId: sent?.id?._serialized || sent?.id?.$1 || sent?.id?.id || null, adminSent: false });

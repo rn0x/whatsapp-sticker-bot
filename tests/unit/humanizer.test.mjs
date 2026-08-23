@@ -8,7 +8,7 @@ import { Database } from "../../src/core/database.mjs";
 import { AppPaths } from "../../src/main/config.mjs";
 import { Logger } from "../../src/main/logger.mjs";
 import { SettingsRepo } from "../../src/core/repositories/settings.repo.mjs";
-import { Humanizer, BOT_TEXTS } from "../../src/bot/humanizer.mjs";
+import { Humanizer, BOT_TEXTS, botText } from "../../src/bot/humanizer.mjs";
 
 let db, settings, logger, humanizer;
 
@@ -54,19 +54,22 @@ const a = h.pick("k1", ["x", "y", "z"]);
   d.close();
 });
 
-test("humanizer: bot texts contain no emoji and have variants", () => {
-  for (const [key, value] of Object.entries(BOT_TEXTS)) {
-    if (typeof value === "function") continue;
-    const texts = Array.isArray(value) ? value : Object.values(value);
-    for (const t of texts) {
-      assert.doesNotMatch(t, /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u, `emoji in ${key}`);
+test("humanizer: bot texts contain no emoji and have variants (ar/en)", () => {
+  for (const lang of ["ar", "en"]) {
+    const table = BOT_TEXTS[lang];
+    for (const [key, value] of Object.entries(table)) {
+      if (typeof value === "function") continue;
+      const texts = Array.isArray(value) ? value : Object.values(value);
+      for (const t of texts) {
+        assert.doesNotMatch(t, /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u, `emoji in ${lang}.${key}`);
+      }
     }
   }
 });
 
-test("humanizer: welcome/help update المستخدم وتشرح الأوامر بلا إيموجي", () => {
-  const welcome = BOT_TEXTS.welcome("سالم");
-  const help = BOT_TEXTS.help(42);
+test("humanizer: welcome/help mention commands and quota, no emoji", () => {
+  const welcome = botText("ar", "welcome", "سالم");
+  const help = botText("ar", "help", 42);
   for (const t of [...welcome, ...help]) {
     assert.doesNotMatch(t, /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u, "emoji in dynamic text");
   }
@@ -76,6 +79,12 @@ test("humanizer: welcome/help update المستخدم وتشرح الأوامر 
   }
   for (const h of help) {
     assert.match(h, /42/, "help should include remaining quota");
+  }
+  // الإنجليزية متوافقة أيضاً
+  const enWelcome = botText("en", "welcome", "Salem");
+  for (const w of enWelcome) {
+    assert.doesNotMatch(w, /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u, "emoji in en welcome");
+    assert.match(w, /sticker|Sticker/, "en welcome should mention stickers");
   }
 });
 

@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import { useApp } from "../ctx.js";
 import { useLiveData } from "../hooks/useLiveData.js";
+import { useTranslation } from "react-i18next";
 
-// الإحصائيات — مخطط بسيط بالأعمدة + بطاقات
 export default function StatsPage() {
+  const { t } = useTranslation("ui");
   const { token } = useApp();
   const [days, setDays] = useState(7);
   const [data, setData] = useState(null);
@@ -15,7 +16,7 @@ export default function StatsPage() {
 
   useLiveData(load, { interval: 5000 });
 
-  if (!data) return <div className="empty">تحميل…</div>;
+  if (!data) return <div className="empty">{t("تحميل…")}</div>;
 
   const j = data.jobs || {};
   const daily = data.daily || [];
@@ -34,12 +35,12 @@ export default function StatsPage() {
     <div className="stack">
       <div className="toolbar">
         <label className="field inline">
-          <span>الفترة</span>
+          <span>{t("الفترة")}</span>
           <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
-            <option value={1}>اليوم</option>
-            <option value={7}>أسبوع</option>
-            <option value={30}>شهر</option>
-            <option value={90}>ثلاثة أشهر</option>
+            <option value={1}>{t("اليوم")}</option>
+            <option value={7}>{t("أسبوع")}</option>
+            <option value={30}>{t("شهر")}</option>
+            <option value={90}>{t("ثلاثة أشهر")}</option>
           </select>
         </label>
       </div>
@@ -48,17 +49,17 @@ export default function StatsPage() {
         {cards.map((c) => (
           <div key={c.k} className={`stat-card mini ${c.tone ? "tone-" + c.tone : ""}`}>
             <div className="stat-value">{c.v ?? 0}</div>
-            <div className="stat-label">{c.k}</div>
+            <div className="stat-label">{t(c.k)}</div>
           </div>
         ))}
       </div>
 
       <section className="card">
-        <header className="card-head"><h3>المهام اليومية</h3></header>
+        <header className="card-head"><h3>{t("المهام اليومية")}</h3></header>
         <div className="card-body">
           <div className="chart">
             {daily.map((d) => (
-              <div key={d.day} className="chart-col" title={`${d.day}: ${d.total} (نجح ${d.completed})`}>
+              <div key={d.day} className="chart-col" title={`${d.day}: ${d.total} (${t("نجحت")} ${d.completed})`}>
                 <div className="chart-bar" style={{ height: `${Math.max(4, (d.total / max) * 100)}%` }} />
                 <small>{shortDay(d.day)}</small>
               </div>
@@ -73,7 +74,7 @@ export default function StatsPage() {
 function ms(v) {
   if (!v) return "—";
   if (v < 1000) return `${Math.round(v)} ms`;
-  return `${(v / 1000).toFixed(1)} ث`;
+  return `${(v / 1000).toFixed(1)} s`;
 }
 
 function shortDay(iso) {

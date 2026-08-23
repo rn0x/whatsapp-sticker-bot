@@ -156,7 +156,7 @@ export class UsersRepo {
   getPrefs(userId) {
     if (!userId) return null;
     const r = this.db.prepare("SELECT * FROM user_prefs WHERE user_id=?").get(userId);
-    if (!r) return { userId, autoConvert: 1, allowImage: 1, allowVideo: 1, packName: null, packAuthor: null };
+    if (!r) return { userId, autoConvert: 1, allowImage: 1, allowVideo: 1, packName: null, packAuthor: null, lang: null };
     return {
       userId: r.user_id,
       autoConvert: r.auto_convert === 1,
@@ -164,7 +164,28 @@ export class UsersRepo {
       allowVideo: r.allow_video === 1,
       packName: r.pack_name || null,
       packAuthor: r.pack_author || null,
+      lang: r.lang || null,
     };
+  }
+
+  // لغة المستخدم المفضّلة (ar/en) — تُستخدم في ردود البوت.
+  getLang(userId) {
+    if (!userId) return null;
+    const r = this.db.prepare("SELECT lang FROM user_prefs WHERE user_id=?").get(userId);
+    return r?.lang || null;
+  }
+
+  setLang(userId, lang) {
+    if (!userId) return null;
+    const code = lang === "en" ? "en" : "ar";
+    const cur = this.db.prepare("SELECT 1 FROM user_prefs WHERE user_id=?").get(userId);
+    if (!cur) {
+      this.db.prepare("INSERT INTO user_prefs (user_id, auto_convert, allow_image, allow_video, lang, updated_at) VALUES (?,1,1,1,?,?)")
+        .run(userId, code, nowIso());
+    } else {
+      this.db.prepare("UPDATE user_prefs SET lang=?, updated_at=? WHERE user_id=?").run(code, nowIso(), userId);
+    }
+    return code;
   }
 
   updatePrefs(userId, fields = {}) {

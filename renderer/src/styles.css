@@ -592,7 +592,7 @@ input:focus, select:focus { border-color: var(--green); }
 }
 .chat-item-sub .group-badge {
   font-style: normal; background: var(--accent-dim); color: var(--accent);
-  border-radius: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; margin-left: 2px;
+  border-radius: 6px; font-size: 10px; font-weight: 700; padding: 1px 6px; margin-inline-start: 2px;
 }
 .chat-item-sub .group-badge + em, .chat-item-sub span > em {
   font-style: normal; color: var(--faint); background: none; padding: 0;
@@ -653,3 +653,10 @@ input:focus, select:focus { border-color: var(--green); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ===== مرآة LTR =====
+   التصميم معتمد على الخصائص المنطقية (inset-inline-*, text-align: start)
+   وتخطيط flex/grid، فيتكيّف تلقائياً مع اتجاه المستند (dir). أي خاصية
+   اتجاهية فيزيائية متبقية تُعكَس هنا صراحةً عند dir="ltr". */
+[dir="ltr"] input[type="number"],
+[dir="ltr"] select { text-align: start; }

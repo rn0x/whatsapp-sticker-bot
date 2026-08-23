@@ -3,10 +3,11 @@ import { useApp } from "../ctx.js";
 import { useLiveData } from "../hooks/useLiveData.js";
 import { Users, ListOrdered, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { PIPELINE_STAGES, StageIcon } from "../components.jsx";
+import { useTranslation } from "react-i18next";
 
-// لوحة التحكم — نظرة عامة سريعة + خط الإنتاج + أحدث المهام.
 export default function Dashboard() {
   const { token, overview, wa } = useApp();
+  const { t } = useTranslation("ui");
   const [recent, setRecent] = useState(null);
 
   const load = useCallback(async () => {
@@ -14,21 +15,18 @@ export default function Dashboard() {
     if (r.ok) setRecent(r.data.rows);
   }, [token]);
 
-  // تحديث حيّ لأحدث المهام مع كل نبضة overview (2 ثانية) — البطاقات تتغذى من
-  // overview عبر السياق وليست بحاجة لاستدعاء.
   useLiveData(load, { interval: 2000 });
 
   const o = overview || {};
   const waSt = wa?.status || o.whatsapp || "DISCONNECTED";
 
   const cards = [
-    { k: "المستخدمون", v: o.users?.total, sub: `${o.users?.active || 0} نشط · ${o.users?.premium || 0} مميز`, icon: Users, tone: "" },
-    { k: "في قائمة الانتظار", v: o.queueSize, sub: `${o.processingNow || 0} قيد المعالجة`, icon: ListOrdered, tone: "amber" },
-    { k: "نجاح اليوم", v: o.successToday, sub: `من ${o.jobsToday || 0} مهمة`, icon: CheckCircle2, tone: "ok" },
-    { k: "فشل اليوم", v: o.failedToday, sub: `إجمالي ${o.jobsToday || 0}`, icon: XCircle, tone: "danger" },
+    { k: "المستخدمون", v: o.users?.total, sub: t("{{a}} نشط · {{p}} مميز", { a: o.users?.active || 0, p: o.users?.premium || 0 }), icon: Users, tone: "" },
+    { k: "في قائمة الانتظار", v: o.queueSize, sub: `${o.processingNow || 0} ${t("قيد المعالجة")}`, icon: ListOrdered, tone: "amber" },
+    { k: "نجاح اليوم", v: o.successToday, sub: t("من {{n}} مهمة", { n: o.jobsToday || 0 }), icon: CheckCircle2, tone: "ok" },
+    { k: "فشل اليوم", v: o.failedToday, sub: t("إجمالي {{n}}", { n: o.jobsToday || 0 }), icon: XCircle, tone: "danger" },
   ];
 
-  // رصد تمرير المهام في خط الإنتاج: أكبر مؤشر للطاقة هو قيد المعالجة.
   const activeIndex = o.processingNow > 0
     ? 1
     : o.queueSize > 0
@@ -46,7 +44,7 @@ export default function Dashboard() {
             <div className="stat-icon"><Icon size={20} strokeWidth={2.2} /></div>
             <div>
               <div className="stat-value">{c.v ?? "…"}</div>
-              <div className="stat-label">{c.k}</div>
+              <div className="stat-label">{t(c.k)}</div>
               <div className="stat-sub">{c.sub}</div>
             </div>
           </div>
@@ -54,29 +52,28 @@ export default function Dashboard() {
       })}
 
       <section className="card span-2">
-        <header className="card-head"><h3>حالة واتساب</h3></header>
+        <header className="card-head"><h3>{t("حالة واتساب")}</h3></header>
         <div className="card-body wa-status">
           <span className={`dot ${waSt === "CONNECTED" ? "dot-ok" : waSt === "CONNECTING" || waSt === "AUTHENTICATING" ? "dot-warn" : "dot-bad"}`} />
           <span className="wa-state-label">{waSt}</span>
           {wa?.phone && <span className="muted-text mono">· {wa.phone}</span>}
         </div>
-        {(o.alerts?.length ? o.alerts : []) .map((a) => (
+        {(o.alerts?.length ? o.alerts : []).map((a) => (
           <div key={a.id} className="card-body" style={{ color: "var(--warn)" }}>{a.text}</div>
         ))}
-        {!o.alerts?.length && o.health && <div className="card-body muted-text">النظام سليم</div>}
+        {!o.alerts?.length && o.health && <div className="card-body muted-text">{t("النظام سليم")}</div>}
       </section>
 
-      {/* خط سير المهمة — توقيع الواجهة */}
       <section className="card span-2">
-        <header className="card-head"><h3>خط سير المهمة</h3></header>
+        <header className="card-head"><h3>{t("خط سير المهمة")}</h3></header>
         <div className="card-body">
           <div className="pipeline">
             {PIPELINE_STAGES.map((s, i) => (
               <Fragment key={s.key}>
                 <div className={`pipe-station ${activeIndex === i ? "live" : ""}`}>
                   <span className="pipe-icon"><StageIcon stage={s.key} /></span>
-                  <b>{s.title}</b>
-                  <small>{s.sub}</small>
+                  <b>{t(s.title)}</b>
+                  <small>{t(s.sub)}</small>
                 </div>
                 {i < PIPELINE_STAGES.length - 1 && (
                   <span className={`pipe-connector ${activeIndex >= i ? "active" : ""}`}>
@@ -93,7 +90,7 @@ export default function Dashboard() {
       </section>
 
       <section className="card span-2">
-        <header className="card-head"><h3>أحدث المهام</h3></header>
+        <header className="card-head"><h3>{t("أحدث المهام")}</h3></header>
         <div className="card-body">
           {recent?.length ? (
             <ul className="job-list">
@@ -111,7 +108,7 @@ export default function Dashboard() {
                 </li>
               ))}
             </ul>
-          ) : <div className="empty">لا توجد مهام بعد<br /><span className="empty-stem">ستظهر المهام هنا لحظة إنشائها.</span></div>}
+          ) : <div className="empty">{t("لا توجد مهام بعد")}<br /><span className="empty-stem">{t("ستظهر المهام هنا لحظة إنشائها.")}</span></div>}
         </div>
       </section>
     </div>

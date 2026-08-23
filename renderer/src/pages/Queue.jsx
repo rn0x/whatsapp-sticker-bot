@@ -2,10 +2,12 @@ import { useState, useCallback } from "react";
 import { useApp } from "../ctx.js";
 import { useLiveData } from "../hooks/useLiveData.js";
 import { Pause, Play, RotateCcw, Trash2, RefreshCw, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
-// قائمة الانتظار — عرض، إيقاف/استئناف، تراجع عن فاشل، إلغاء
 export default function QueuePage() {
   const { token } = useApp();
+  const { t } = useTranslation("ui");
   const [status, setStatus] = useState("");
   const [q, setQ] = useState(null);
   const [counts, setCounts] = useState(null);
@@ -18,7 +20,6 @@ export default function QueuePage() {
     if (c.ok) setCounts(c);
   }, [token, status]);
 
-  // تحديث حيّ: الصفوف والعدّادات تتجدد كل 2 ثانية دون الحاجة للخروج من الصفحة.
   useLiveData(load, { interval: 2000 });
 
   async function act(channel) {
@@ -32,9 +33,9 @@ export default function QueuePage() {
     <div className="stack">
       <div className="toolbar">
         <label className="field inline">
-          <span>الحالة</span>
+          <span>{t("الحالة")}</span>
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">الكل</option>
+            <option value="">{t("الكل")}</option>
             <option>QUEUED</option>
             <option>PROCESSING</option>
             <option>SENDING</option>
@@ -43,11 +44,11 @@ export default function QueuePage() {
             <option>CANCELLED</option>
           </select>
         </label>
-        <button className="btn" onClick={() => act("queue:pause")}><Pause size={14} /> إيقاف مؤقت</button>
-        <button className="btn" onClick={() => act("queue:resume")}><Play size={14} /> استئناف</button>
-        <button className="btn btn-warn" onClick={() => act("queue:retry-failed")}><RotateCcw size={14} /> إعادة الفاشلة</button>
-        <button className="btn btn-danger" onClick={() => act("queue:clear-failed")}><Trash2 size={14} /> حذف الفاشلة</button>
-        <button className="btn btn-ghost" onClick={load}><RefreshCw size={14} /> تحديث</button>
+        <button className="btn" onClick={() => act("queue:pause")}><Pause size={14} /> {t("إيقاف مؤقت")}</button>
+        <button className="btn" onClick={() => act("queue:resume")}><Play size={14} /> {t("استئناف")}</button>
+        <button className="btn btn-warn" onClick={() => act("queue:retry-failed")}><RotateCcw size={14} /> {t("إعادة الفاشلة")}</button>
+        <button className="btn btn-danger" onClick={() => act("queue:clear-failed")}><Trash2 size={14} /> {t("حذف الفاشلة")}</button>
+        <button className="btn btn-ghost" onClick={load}><RefreshCw size={14} /> {t("تحديث")}</button>
       </div>
 
       <div className="grid cols-4">
@@ -61,7 +62,7 @@ export default function QueuePage() {
           <div className="tbl-wrap">
             <table className="tbl">
               <thead>
-                <tr><th>ID</th><th>النوع</th><th>المستخدم</th><th>الحالة</th><th>المحاولة</th><th>الأولوية</th><th>أنشئت</th><th></th></tr>
+                <tr><th>ID</th><th>{t("النوع")}</th><th>{t("المستخدم")}</th><th>{t("الحالة")}</th><th>{t("المحاولة")}</th><th>{t("الأولوية")}</th><th>{t("أنشئت")}</th><th></th></tr>
               </thead>
               <tbody>
                 {(q?.rows || []).map((j) => (
@@ -75,7 +76,7 @@ export default function QueuePage() {
                     <td>{fmt(j.created_at)}</td>
                     <td>
                       {(j.status === "QUEUED" || j.status === "PROCESSING" || j.status === "SENDING") && (
-                        <button className="btn btn-danger btn-sm" onClick={() => window.api.invoke("queue:cancel", { token, ids: [j.id] }).then(load)}><XCircle size={12} /> إلغاء</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => window.api.invoke("queue:cancel", { token, ids: [j.id] }).then(load)}><XCircle size={12} /> {t("إلغاء")}</button>
                       )}
                     </td>
                   </tr>
@@ -96,5 +97,5 @@ function BadgeStatus({ v }) {
 
 function fmt(d) {
   if (!d) return "—";
-  return new Date(d).toLocaleString("ar");
+  return new Date(d).toLocaleString(i18n.language === "en" ? "en" : "ar");
 }
