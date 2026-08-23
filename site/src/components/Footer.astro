@@ -13,7 +13,7 @@ const { ui, release, base } = Astro.props;
       <a href="https://github.com/rn0x/whatsapp-sticker-bot" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/rn0x/whatsapp-sticker-bot/releases" target="_blank" rel="noopener">{ui.nav.download}</a>
       <a href={`${base}favicon.svg`} rel="license">{ui.footer.license}</a>
-      <span class="muted">{ui.footer.version} {release.version}</span>
+      <span class="muted">{ui.footer.version} <span id="site-version">{release.version}</span></span>
     </div>
   </div>
 </footer>

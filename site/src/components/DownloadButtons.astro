@@ -44,6 +44,70 @@ function fmtSize(n?: number) {
   </div>
 </section>
 <script>
+  // runtime: always reflect the latest GitHub release so links/version stay
+  // current without redeploying the site (GitHub API allows CORS).
+  (async () => {
+    const REPO = "rn0x/whatsapp-sticker-bot";
+    const cmpTag = (a, b) => {
+      const pa = a.replace(/^v/, "").split(".").map(Number);
+      const pb = b.replace(/^v/, "").split(".").map(Number);
+      for (let i = 0; i < 3; i++) {
+        const d = (pb[i] || 0) - (pa[i] || 0);
+        if (d) return d;
+      }
+      return 0;
+    };
+    const fmtSize = (n) => {
+      if (!n) return "";
+      const mb = n / 1048576;
+      return mb >= 1024 ? (mb / 1024).toFixed(2) + " GB" : Math.round(mb) + " MB";
+    };
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
+        headers: { "User-Agent": "wsb-site", Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) return;
+      const list = await res.json();
+      const releases = (list || [])
+        .filter((r) => !r.draft && !r.prerelease && (r.assets?.length ?? 0) > 0)
+        .sort((a, b) => cmpTag(a.tag_name, b.tag_name));
+      const data = releases[0];
+      if (!data) return;
+      const tag = String(data.tag_name ?? "").replace(/^v/, "");
+      const verEl = document.getElementById("site-version");
+      if (verEl) verEl.textContent = tag;
+      const meta = document.querySelector('meta[name="softwareVersion"]');
+      if (meta) meta.setAttribute("content", tag);
+      const map = {};
+      for (const a of data.assets || []) {
+        const n = a.name.toLowerCase();
+        if (n.endsWith(".blockmap") || n.startsWith("latest-") || n.endsWith(".yml")) continue;
+        const key = n.endsWith(".deb") ? "deb"
+          : n.endsWith(".rpm") ? "rpm"
+          : n.endsWith(".appimage") ? "appimage"
+          : n.endsWith(".tar.gz") ? "targz"
+          : n.endsWith(".flatpak") ? "flatpak"
+          : n.endsWith(".snap") ? "snap"
+          : n.endsWith(".dmg") ? "dmg"
+          : n.endsWith(".exe") ? "exe"
+          : null;
+        if (key) map[key] = { url: a.browser_download_url, size: a.size };
+      }
+      for (const [key, a] of Object.entries(map)) {
+        const card = document.querySelector(`.dl-card[data-os="${key}"]`);
+        if (!card) continue;
+        const btn = card.querySelector(".dl-btn");
+        if (btn) btn.setAttribute("href", a.url);
+        const sizeEl = card.querySelector(".size");
+        if (sizeEl) {
+          const prefix = sizeEl.textContent.split(":")[0];
+          sizeEl.textContent = `${prefix}: ${fmtSize(a.size)}`;
+        }
+      }
+    } catch {}
+  })();
+
+  // highlight the card matching the visitor's OS
   const ua = navigator.userAgent;
   let os = "deb";
   if (/Win/i.test(ua)) os = "exe";
