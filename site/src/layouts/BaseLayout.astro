@@ -17,7 +17,8 @@ interface Props {
 
 const { lang, dir, title, description, pathname, ui, release } = Astro.props;
 const site = import.meta.env.SITE as string;
-const BASE = import.meta.env.BASE_URL as string;
+const BASE_RAW = import.meta.env.BASE_URL as string;
+const BASE = BASE_RAW.endsWith("/") ? BASE_RAW : BASE_RAW + "/";
 
 const canonical = new URL(pathname, site).href;
 const canonicalAr = new URL("", site).href;

@@ -1,7 +1,8 @@
 ---
 import type { UiDict } from "../i18n/ui";
 const { ui } = Astro.props;
-const BASE = import.meta.env.BASE_URL as string;
+const BASE_RAW = import.meta.env.BASE_URL as string;
+const BASE = BASE_RAW.endsWith("/") ? BASE_RAW : BASE_RAW + "/";
 const shots = [1, 2, 3, 4, 5, 6, 7, 8];
 ---
 <section class="block" id="screenshots">

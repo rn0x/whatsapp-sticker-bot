@@ -2,7 +2,8 @@
 import Icon from "./Icon.astro";
 import type { UiDict } from "../i18n/ui";
 const { lang, ui } = Astro.props;
-const BASE = import.meta.env.BASE_URL as string;
+const BASE_RAW = import.meta.env.BASE_URL as string;
+const BASE = BASE_RAW.endsWith("/") ? BASE_RAW : BASE_RAW + "/";
 const home = `${BASE}${lang === "ar" ? "" : "en/"}`;
 const other = `${BASE}${lang === "ar" ? "en/" : ""}`;
 ---
