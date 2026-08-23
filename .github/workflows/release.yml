@@ -38,7 +38,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   linux-flatpak:
-    needs: test
+    needs: [test, linux-core]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -63,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   linux-snap:
-    needs: test
+    needs: [test, linux-core]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -81,7 +81,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   windows:
-    needs: test
+    needs: [test, linux-core]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,7 +97,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   macos:
-    needs: test
+    needs: [test, linux-core]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
