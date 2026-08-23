@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const cacheRoot = join(root, "browser", ".cache");
+const cacheRoot = join(root, "browser", ".cache", "puppeteer");
 mkdirSync(cacheRoot, { recursive: true });
 process.env.PUPPETEER_CACHE_DIR = cacheRoot;
 
