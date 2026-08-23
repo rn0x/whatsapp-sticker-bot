@@ -1,4 +1,4 @@
-import fallback from "../data/release.json";
+import fallback from "../release-fallback.json";
 
 export interface PlatformRelease {
   url: string;
