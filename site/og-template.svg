@@ -1,0 +1,26 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25D366"/>
+      <stop offset="1" stop-color="#075E54"/>
+    </linearGradient>
+    <linearGradient id="stk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ee06f"/>
+      <stop offset="1" stop-color="#1ba84f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(150 185) scale(1.05)">
+    <path d="M150 118 h214 a46 46 0 0 1 46 46 v150 a46 46 0 0 1 -46 46 h-118 l-70 62 v-62 h-26 a46 46 0 0 1 -46 -46 v-150 a46 46 0 0 1 46 -46 z" fill="#ffffff"/>
+    <g transform="translate(198 166)">
+      <path d="M0 0 h118 a18 18 0 0 1 18 18 v74 l-50 50 h-68 a18 18 0 0 1 -18 -18 v-106 a18 18 0 0 1 18 -18 z" fill="url(#stk)"/>
+      <path d="M118 92 l-50 50 v-26 a18 18 0 0 1 18 -18 z" fill="#159a47"/>
+      <circle cx="48" cy="50" r="11" fill="#ffffff"/>
+      <circle cx="94" cy="50" r="11" fill="#ffffff"/>
+      <path d="M50 82 q22 20 44 0" stroke="#ffffff" stroke-width="9" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="640" y="300" font-family="DejaVu Sans, Arial, sans-serif" font-size="62" font-weight="700" fill="#ffffff">WhatsApp Sticker Bot</text>
+  <text x="640" y="360" font-family="DejaVu Sans, Arial, sans-serif" font-size="30" fill="#eafff2">Desktop manager for your sticker bot</text>
+  <text x="640" y="430" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" fill="#cdeedd">Free · Open source (MIT) · Windows · macOS · Linux</text>
+</svg>

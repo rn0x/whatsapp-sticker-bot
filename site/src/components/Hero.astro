@@ -1,0 +1,15 @@
+---
+import type { UiDict } from "../i18n/ui";
+const { ui } = Astro.props;
+---
+<section class="hero">
+  <div class="wrap">
+    <span class="badge">{ui.hero.badge}</span>
+    <h1>{ui.hero.title}</h1>
+    <p>{ui.hero.subtitle}</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#download">{ui.hero.cta}</a>
+      <a class="btn btn-ghost" href="https://github.com/rn0x/whatsapp-sticker-bot" target="_blank" rel="noopener">{ui.hero.secondary}</a>
+    </div>
+  </div>
+</section>

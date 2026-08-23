@@ -1,0 +1,24 @@
+---
+import Icon from "./Icon.astro";
+import type { UiDict } from "../i18n/ui";
+const { lang, ui } = Astro.props;
+const BASE = import.meta.env.BASE_URL as string;
+const home = `${BASE}${lang === "ar" ? "" : "en/"}`;
+const other = `${BASE}${lang === "ar" ? "en/" : ""}`;
+---
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href={home}>
+      <img src={`${BASE}favicon.svg`} alt="" />
+      <span>WhatsApp Sticker Bot</span>
+    </a>
+    <nav class="nav">
+      <a href="#download">{ui.nav.download}</a>
+      <a href="#features">{ui.nav.features}</a>
+      <a href="#screenshots">{ui.nav.screenshots}</a>
+      <a href="#faq">{ui.nav.faq}</a>
+      <a href="https://github.com/rn0x/whatsapp-sticker-bot" target="_blank" rel="noopener">{ui.nav.github}</a>
+      <a class="lang-switch" href={other} hreflang={lang === "ar" ? "en" : "ar"}>{lang === "ar" ? "EN" : "ع"}</a>
+    </nav>
+  </div>
+</header>

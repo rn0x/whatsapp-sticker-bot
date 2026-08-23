@@ -1,0 +1,17 @@
+---
+import type { UiDict } from "../i18n/ui";
+const { ui } = Astro.props;
+---
+<section class="block" id="faq">
+  <div class="wrap">
+    <h2 class="section-title">{ui.faqTitle}</h2>
+    <div class="faq">
+      {ui.faq.map((item) => (
+        <details>
+          <summary>{item.q}</summary>
+          <p>{item.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

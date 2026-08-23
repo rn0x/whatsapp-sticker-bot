@@ -1,0 +1,54 @@
+---
+import Icon from "./Icon.astro";
+import type { UiDict } from "../i18n/ui";
+const { ui, assets } = Astro.props;
+const platforms = [
+  { key: "exe", os: "exe", label: ui.download.windows, sub: "Windows", icon: "windows" },
+  { key: "dmg", os: "dmg", label: ui.download.macos, sub: "macOS", icon: "apple" },
+  { key: "deb", os: "deb", label: ui.download.deb, sub: "Linux", icon: "linux" },
+  { key: "rpm", os: "rpm", label: ui.download.rpm, sub: "Linux", icon: "linux" },
+  { key: "appimage", os: "appimage", label: ui.download.appimage, sub: "Linux", icon: "linux" },
+  { key: "flatpak", os: "flatpak", label: ui.download.flatpak, sub: "Linux", icon: "linux" },
+  { key: "snap", os: "snap", label: ui.download.snap, sub: "Linux", icon: "linux" },
+  { key: "targz", os: "targz", label: ui.download.targz, sub: "Linux", icon: "linux" },
+];
+function fmtSize(n?: number) {
+  if (!n) return "";
+  const mb = n / 1048576;
+  return mb >= 1024 ? (mb / 1024).toFixed(2) + " GB" : Math.round(mb) + " MB";
+}
+---
+<section class="block" id="download">
+  <div class="wrap">
+    <h2 class="section-title">{ui.download.title}</h2>
+    <p class="section-sub">{ui.download.subtitle}</p>
+    <div class="dl-grid">
+      {platforms.map((p) => {
+        const a = assets[p.key];
+        return (
+          <div class="dl-card" data-os={p.os}>
+            <div class="os"><Icon name={p.icon} /> {p.label}</div>
+            <div class="sub">{p.sub}</div>
+            {a ? (
+              <>
+                <div class="size">{ui.download.size}: {fmtSize(a.size)}</div>
+                <a class="dl-btn" href={a.url} download>{ui.download.btn}</a>
+              </>
+            ) : (
+              <div class="soon">{ui.download.soon}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+<script>
+  const ua = navigator.userAgent;
+  let os = "deb";
+  if (/Win/i.test(ua)) os = "exe";
+  else if (/Mac/i.test(ua)) os = "dmg";
+  else if (/Linux/i.test(ua)) os = "deb";
+  const el = document.querySelector(`.dl-card[data-os="${os}"]`);
+  if (el) el.classList.add("is-primary");
+</script>

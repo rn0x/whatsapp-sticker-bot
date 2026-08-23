@@ -1,0 +1,22 @@
+---
+import type { UiDict } from "../i18n/ui";
+const { ui } = Astro.props;
+const BASE = import.meta.env.BASE_URL as string;
+const shots = [1, 2, 3, 4, 5, 6, 7, 8];
+---
+<section class="block" id="screenshots">
+  <div class="wrap">
+    <h2 class="section-title">{ui.screenshotsTitle}</h2>
+    <div class="shots">
+      {shots.map((n) => {
+        const file = `screenshot-${String(n).padStart(2, "0")}.png`;
+        return (
+          <figure>
+            <img src={`${BASE}screenshots/${file}`} alt={`${ui.screenshotsTitle} ${n}`} loading="lazy" />
+            <figcaption>{ui.screenshotsTitle} {n}</figcaption>
+          </figure>
+        );
+      })}
+    </div>
+  </div>
+</section>

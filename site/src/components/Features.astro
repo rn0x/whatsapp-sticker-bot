@@ -1,0 +1,19 @@
+---
+import Icon from "./Icon.astro";
+import type { UiDict } from "../i18n/ui";
+const { ui } = Astro.props;
+---
+<section class="block" id="features">
+  <div class="wrap">
+    <h2 class="section-title">{ui.featuresTitle}</h2>
+    <div class="feat-grid">
+      {ui.features.map((f) => (
+        <div class="feat">
+          <div class="ic"><Icon name={f.icon} /></div>
+          <h3>{f.title}</h3>
+          <p>{f.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25D366"/>
+      <stop offset="1" stop-color="#075E54"/>
+    </linearGradient>
+    <linearGradient id="stk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ee06f"/>
+      <stop offset="1" stop-color="#1ba84f"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="116" ry="116" fill="url(#bg)"/>
+  <path d="M150 118 h214 a46 46 0 0 1 46 46 v150 a46 46 0 0 1 -46 46 h-118 l-70 62 v-62 h-26 a46 46 0 0 1 -46 -46 v-150 a46 46 0 0 1 46 -46 z" fill="#ffffff"/>
+  <g transform="translate(198 166)">
+    <path d="M0 0 h118 a18 18 0 0 1 18 18 v74 l-50 50 h-68 a18 18 0 0 1 -18 -18 v-106 a18 18 0 0 1 18 -18 z" fill="url(#stk)"/>
+    <path d="M118 92 l-50 50 v-26 a18 18 0 0 1 18 -18 z" fill="#159a47"/>
+    <circle cx="48" cy="50" r="11" fill="#ffffff"/>
+    <circle cx="94" cy="50" r="11" fill="#ffffff"/>
+    <path d="M50 82 q22 20 44 0" stroke="#ffffff" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

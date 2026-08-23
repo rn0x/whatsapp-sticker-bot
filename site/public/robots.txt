@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rn0x.github.io/whatsapp-sticker-bot/sitemap-index.xml

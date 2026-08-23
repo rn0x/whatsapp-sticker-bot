@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import DownloadButtons from "../components/DownloadButtons.astro";
+import Features from "../components/Features.astro";
+import Platforms from "../components/Platforms.astro";
+import Screenshots from "../components/Screenshots.astro";
+import FAQ from "../components/FAQ.astro";
+import { getRelease } from "../lib/release";
+import { t } from "../i18n/ui";
+
+const lang = "ar";
+const ui = t(lang);
+const release = await getRelease();
+---
+<BaseLayout lang="ar" dir="rtl" title={ui.metaTitle} description={ui.metaDescription} pathname="" ui={ui} release={release}>
+  <Hero ui={ui} />
+  <DownloadButtons ui={ui} assets={release.assets} />
+  <Features ui={ui} />
+  <Platforms ui={ui} />
+  <Screenshots ui={ui} />
+  <FAQ ui={ui} />
+</BaseLayout>

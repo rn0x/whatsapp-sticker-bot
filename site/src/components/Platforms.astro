@@ -1,0 +1,21 @@
+---
+import Icon from "./Icon.astro";
+import type { UiDict } from "../i18n/ui";
+const { ui } = Astro.props;
+const platforms = [
+  { icon: "windows", label: ui.download.windows },
+  { icon: "apple", label: ui.download.macos },
+  { icon: "linux", label: ui.download.linux },
+];
+---
+<section class="block">
+  <div class="wrap">
+    <h2 class="section-title">{ui.platformsTitle}</h2>
+    <p class="section-sub">{ui.platformsSubtitle}</p>
+    <div class="plat-row">
+      {platforms.map((p) => (
+        <div class="plat"><Icon name={p.icon} /> {p.label}</div>
+      ))}
+    </div>
+  </div>
+</section>

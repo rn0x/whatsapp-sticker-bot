@@ -1,0 +1,83 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import type { UiDict } from "../i18n/ui";
+import type { ReleaseInfo } from "../lib/release";
+
+interface Props {
+  lang: "ar" | "en";
+  dir: "rtl" | "ltr";
+  title: string;
+  description: string;
+  pathname: string; // "" for ar, "en/" for en
+  ui: UiDict;
+  release: ReleaseInfo;
+}
+
+const { lang, dir, title, description, pathname, ui, release } = Astro.props;
+const site = import.meta.env.SITE as string;
+const BASE = import.meta.env.BASE_URL as string;
+
+const canonical = new URL(pathname, site).href;
+const canonicalAr = new URL("", site).href;
+const canonicalEn = new URL("en/", site).href;
+const ogImage = new URL("og-image.png", site).href;
+const releasesUrl = "https://github.com/rn0x/whatsapp-sticker-bot/releases/latest";
+const locale = lang === "ar" ? "ar_SA" : "en_US";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "WhatsApp Sticker Bot",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Windows, macOS, Linux",
+  softwareVersion: release.version,
+  url: canonical,
+  sameAs: "https://github.com/rn0x/whatsapp-sticker-bot",
+  author: { "@type": "Person", name: "Rayan Almalki" },
+  license: "https://opensource.org/licenses/MIT",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  downloadUrl: releasesUrl,
+};
+---
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={`${BASE}favicon.svg`} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="WhatsApp Sticker Bot" />
+    <meta property="og:locale" content={locale} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Hreflang alternates -->
+    <link rel="alternate" hreflang="ar" href={canonicalAr} />
+    <link rel="alternate" hreflang="en" href={canonicalEn} />
+    <link rel="alternate" hreflang="x-default" href={canonicalAr} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <Header lang={lang} ui={ui} />
+    <main>
+      <slot />
+    </main>
+    <Footer ui={ui} release={release} base={BASE} />
+  </body>
+</html>
