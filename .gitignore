@@ -19,6 +19,8 @@ data/
 backups/
 exports/
 .cache/
+# Astro generated types (regenerated each build)
+.astro/
 # Bundled Chromium cache (setup-browser)
 browser/
 .wwebjs_cache/
