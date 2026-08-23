@@ -47,6 +47,24 @@ export class LogsRepo {
     return this.db.prepare("DELETE FROM logs WHERE created_at < ?").run(iso).changes;
   }
 
+  clearAll() {
+    return this.db.prepare("DELETE FROM logs").run().changes;
+  }
+
+  stats() {
+    const byLevel = { INFO: 0, WARN: 0, ERROR: 0 };
+    const rows = this.db.prepare("SELECT level, COUNT(*) AS c FROM logs GROUP BY level").all();
+    for (const r of rows) {
+      if (r.level in byLevel) byLevel[r.level] = r.c;
+    }
+    const total = this.db.prepare("SELECT COUNT(*) AS c FROM logs").get().c;
+    return { byLevel, total };
+  }
+
+  all(limit = 100000) {
+    return this.db.prepare("SELECT * FROM logs ORDER BY id DESC LIMIT ?").all(limit);
+  }
+
   recent(limit = 50) {
     return this.db.prepare("SELECT * FROM logs ORDER BY id DESC LIMIT ?").all(limit);
   }

@@ -21,7 +21,7 @@ const ALLOWED_INVOKE = new Set([
   "whatsapp:status", "whatsapp:connect", "whatsapp:disconnect",
   "whatsapp:logout", "whatsapp:pairing",
   "backups:list", "backups:create", "backups:restore",
-  "logs:list",
+  "logs:list", "logs:stats", "logs:export", "logs:clear", "logs:reload",
   "system:factory-reset",
 ]);
 

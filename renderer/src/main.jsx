@@ -170,12 +170,12 @@ function LanguageGate({ value, onPick }) {
         <p className="muted-text center">{t("يمكنك تغيير اللغة لاحقاً من الإعدادات.")}</p>
         <div className="lang-options">
           <button className={`lang-opt ${value === "ar" ? "active" : ""}`} onClick={() => onPick("ar")}>
-            <span className="lang-name">العربية</span>
-            <span className="lang-sub">Arabic</span>
+            <span className="lang-name">{t("العربية")}</span>
+            <span className="lang-sub">English</span>
           </button>
           <button className={`lang-opt ${value === "en" ? "active" : ""}`} onClick={() => onPick("en")}>
-            <span className="lang-name">English</span>
-            <span className="lang-sub">الإنجليزية</span>
+            <span className="lang-name">{t("English")}</span>
+            <span className="lang-sub">العربية</span>
           </button>
         </div>
       </div>
@@ -189,14 +189,15 @@ function App() {
   const [overview, setOverview] = useState(null);
   const [wa, setWa] = useState({ status: "DISCONNECTED" });
   const [token, setToken] = useState(null);
-  const [authState, setAuthState] = useState({ configured: false, requireLogin: true, done: false, language: null });
+  const [authState, setAuthState] = useState({ configured: false, requireLogin: true, done: false, language: null, languageChosen: false });
   const [gateLang, setGateLang] = useState("ar");
 
   // المصادقة
   useEffect(() => {
     const saved = localStorage.getItem("sb_token");
     if (saved) setToken(saved);
-    api.invoke("auth:status").then((r) => setAuthState({ configured: r.configured, requireLogin: r.requireLogin, done: true, language: r.language || null }));
+    api.invoke("auth:status").then((r) => setAuthState({ configured: r.configured, requireLogin: r.requireLogin, done: true, language: r.language || null, languageChosen: r.languageChosen === true }));
+    api.invoke("theme:get").then((r) => { if (r?.ok && r.theme) document.documentElement.setAttribute("data-theme", r.theme); }).catch(() => {});
   }, []);
 
   // السلوك الأصلي للتطبيق: منع قائمة السياق الافتراضية (فحص/نسخ) خارج الحقول.
@@ -243,7 +244,7 @@ function App() {
     setGateLang(lang);
     setLang(lang);
     try { await api.invoke("app:set-language", { value: lang }); } catch { /* تجاهل */ }
-    setAuthState((s) => ({ ...s, language: lang }));
+    setAuthState((s) => ({ ...s, language: lang, languageChosen: true }));
   }
 
   const ctx = useMemo(() => ({
@@ -262,8 +263,8 @@ function App() {
     </div>
   );
 
-  // بوّابة اللغة عند أول تشغيل (لا لغة محددة بعد).
-  if (authState.language == null) {
+  // بوّابة اللغة عند أول تشغيل (لم يختر المستخدم لغته بعد).
+  if (!authState.languageChosen) {
     return (
       <div className="boot-wrap">
         <Titlebar />

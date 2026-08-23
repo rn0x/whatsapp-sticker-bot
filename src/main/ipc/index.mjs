@@ -28,11 +28,14 @@ const EDITABLE_SETTINGS = new Set([
   "media.stickerMaxFps", "media.stickerQuality", "media.stickerSize",
   "storage.cacheRetentionHours", "storage.failedRetentionDays", "storage.logsRetentionDays",
   "storage.cleanupIntervalMinutes", "storage.diskFreeSpaceThresholdMb",
-  "whatsapp.groupMode", "whatsapp.autoReconnect",
+  "whatsapp.provider", "whatsapp.groupMode", "whatsapp.autoReconnect", "whatsapp.autoConnectOnBoot",
+  "whatsapp.sessionInstanceId", "whatsapp.instanceName",
+  "humanizer.enabled", "humanizer.typingEnabled", "humanizer.markSeenEnabled",
+  "humanizer.replyDelayMinMs", "humanizer.replyDelayMaxMs",
   "rateLimit.perUserPerMinute", "rateLimit.perGroupPerMinute", "rateLimit.globalPerMinute",
   "rateLimit.maxInvalidPerHour", "admin.lockTimeoutMinutes",
   "history.enabled", "history.mediaRetentionDays",
-  "app.language", "app.autoUpdateEnabled",
+  "app.language", "app.theme", "app.autoUpdateEnabled",
 ]);
 
 export class IpcHub {
@@ -81,6 +84,7 @@ export class IpcHub {
       configured: s.admin.isConfigured(),
       requireLogin: s.admin.loginRequired(),
       language: s.settings.get("app.language") || null,
+      languageChosen: s.settings.get("app.languageChosen") === true,
     }));
 
     def("theme:get", () => ({
@@ -92,6 +96,7 @@ export class IpcHub {
     def("app:set-language", ({ value }) => {
       if (value !== "ar" && value !== "en") return translateResult({ ok: false, error: "قيمة غير مسموحة" }, lang);
       s.settings.set("app.language", value);
+      s.settings.set("app.languageChosen", true);
       return { ok: true };
     });
 
@@ -416,6 +421,30 @@ export class IpcHub {
         data: s.logger.repo.search(f),
       };
     });
+
+    def("logs:stats", () => {
+      const stats = s.logger.repo.stats();
+      return { ok: true, ...stats };
+    });
+
+    def("logs:export", () => {
+      const rows = s.logger.repo.all();
+      const header = ["id", "created_at", "level", "scope", "message", "meta_json"];
+      const esc = (v) => {
+        const s = v === undefined || v === null ? "" : String(v);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [header.join(",")];
+      for (const r of rows) lines.push(header.map((h) => esc(r[h])).join(","));
+      return { ok: true, csv: lines.join("\n") };
+    });
+
+    def("logs:clear", () => {
+      const n = s.logger.repo.clearAll();
+      return { ok: true, deleted: n };
+    });
+
+    def("logs:reload", () => ({ ok: true }));
   }
 }
 
