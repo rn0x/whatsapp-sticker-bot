@@ -14,6 +14,16 @@ export interface ReleaseInfo {
 
 const REPO = "rn0x/whatsapp-sticker-bot";
 
+function cmpTag(a: string, b: string): number {
+  const pa = a.replace(/^v/, "").split(".").map(Number);
+  const pb = b.replace(/^v/, "").split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const d = (pb[i] || 0) - (pa[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+
 function mapAssets(assets: { name: string; browser_download_url: string; size: number }[]): Record<string, PlatformRelease> {
   const map: Record<string, PlatformRelease> = {};
   for (const a of assets) {
@@ -31,10 +41,11 @@ function mapAssets(assets: { name: string; browser_download_url: string; size: n
   return map;
 }
 
-// يجلب أحدث إصدار من GitHub API وقت البناء؛ يعود للبيانات الثابتة عند الفشل.
+// يجلب أحدث إصدار (حسب أعلى رقم semver) من GitHub API وقت البناء؛
+// يعود للبيانات الثابتة عند الفشل.
 export async function getRelease(): Promise<ReleaseInfo> {
   try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
       headers: {
         Authorization: `Bearer ${process.env.GITHUB_TOKEN ?? ""}`,
         "User-Agent": "wsb-site",
@@ -42,7 +53,18 @@ export async function getRelease(): Promise<ReleaseInfo> {
       },
     });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    const data = await res.json();
+    const list = (await res.json()) as {
+      tag_name: string;
+      published_at: string;
+      draft?: boolean;
+      prerelease?: boolean;
+      assets?: { name: string; browser_download_url: string; size: number }[];
+    }[];
+    const releases = list
+      .filter((r) => !r.draft && !r.prerelease && (r.assets?.length ?? 0) > 0)
+      .sort((a, b) => cmpTag(a.tag_name, b.tag_name));
+    const data = releases[0];
+    if (!data) throw new Error("no releases with assets");
     return {
       tag: data.tag_name,
       version: String(data.tag_name ?? "").replace(/^v/, ""),
