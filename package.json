@@ -1,0 +1,76 @@
+{
+  "name": "whatsapp-sticker-bot",
+  "productName": "WhatsApp Sticker Bot",
+  "version": "1.0.0",
+  "description": "Desktop manager for a WhatsApp sticker bot: persistent queue, quotas, crash recovery, dashboard",
+  "type": "module",
+  "main": "src/main/index.mjs",
+  "license": "MIT",
+  "homepage": "https://github.com/rn0x/whatsapp-sticker-bot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rn0x/whatsapp-sticker-bot.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.mjs",
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .",
+    "start": "electron .",
+    "build:renderer": "vite build",
+    "build": "npm run build:renderer",
+    "test": "node --experimental-sqlite --test --test-concurrency=1 tests/**/*.test.mjs",
+    "test:unit": "node --experimental-sqlite --test tests/unit/*.test.mjs",
+    "test:integration": "node --experimental-sqlite --test --test-concurrency=1 tests/integration/*.test.mjs",
+    "load:test": "node scripts/load-test.mjs",
+    "pack": "npm run build && electron-builder --dir",
+    "pack:linux": "npm run build && electron-builder --linux",
+    "pack:appimage": "npm run build && electron-builder --linux AppImage",
+    "pack:deb": "npm run build && electron-builder --linux deb",
+    "pack:rpm": "npm run build && electron-builder --linux rpm",
+    "pack:flatpak": "npm run build && electron-builder --linux flatpak",
+    "pack:snap": "npm run build && electron-builder --linux snap",
+    "pack:pacman": "npm run build && electron-builder --linux pacman",
+    "pack:tar": "npm run build && electron-builder --linux tar.gz",
+    "pack:win": "npm run build && electron-builder --windows",
+    "pack:win:portable": "npm run build && electron-builder --windows portable",
+    "pack:mac": "npm run build && electron-builder --mac",
+    "packlinux": "npm run pack:linux",
+    "packwin": "npm run pack:win",
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "author": {
+    "name": "Rayan Almalki",
+    "email": "rn0x.me@gmail.com",
+    "url": "https://i8x.net"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "archiver": "^7.0.1",
+    "ffmpeg-static": "^5.3.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "lucide-react": "^1.33.0",
+    "puppeteer": "^24.38.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sharp": "^0.35.3",
+    "whatsapp-web.js": "github:lindionez/whatsapp-web.js#feat/fix-_serialized-id-fallback",
+    "yauzl": "^3.2.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "43.4.1",
+    "electron-builder": "^26.0.12",
+    "vite": "^8.2.1",
+    "wait-on": "^8.0.3"
+  }
+}

@@ -1,0 +1,99 @@
+appId: com.wsb.stickerbot
+productName: WhatsApp Sticker Bot
+copyright: "Copyright © 2026 Rayan Almalki"
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - src/**/*
+  - dist-renderer/**/*
+  - package.json
+
+# لا تُخزن native modules داخل asar (تتطلب مسارات ملفات حقيقية)
+asarUnpack:
+  - node_modules/sharp/**/*
+  - node_modules/@img/**/*
+  - node_modules/ffmpeg-static/**/*
+  - node_modules/whatsapp-web.js/**/*
+
+# الملفات الثنائية الخارجية (binaries لا تدخل في asar):
+# 1) ffmpeg-static → resources/ffmpeg/ffmpeg (يستعين به src/media/ffmpeg.mjs)
+# 2) متصفح Chromium الخاص بالبوت → resources/browser (يستعين به src/whatsapp/chromium.mjs)
+extraResources:
+  - from: node_modules/ffmpeg-static/ffmpeg
+    to: ffmpeg/ffmpeg
+    filter:
+      - "**/*"
+  - from: browser/.cache/puppeteer
+    to: browser
+    filter:
+      - "**/*"
+
+publish:
+  provider: github
+  owner: rn0x
+  repo: whatsapp-sticker-bot
+
+linux:
+  target:
+    - AppImage
+    - deb
+    - rpm
+    - flatpak
+    - snap
+    - tar.gz
+  category: Utility
+  executableName: whatsapp-sticker-bot
+  desktopName: com.wsb.stickerbot
+  syncDesktopName: true
+  icon: build/icons
+
+flatpak:
+  runtime: org.freedesktop.Platform
+  runtimeVersion: "24.08"
+  sdk: org.freedesktop.Sdk
+  base: org.electronjs.Electron2.BaseApp
+  baseVersion: "24.08"
+  finishArgs:
+    - --share=ipc
+    - --share=network
+    - --socket=x11
+    - --socket=wayland
+    - --socket=pulseaudio
+    - --device=dri
+    - --filesystem=home
+    - --talk-name=org.freedesktop.Notifications
+
+snap:
+  base: core24
+  confinement: strict
+  grade: stable
+  plugs:
+    - default
+    - network
+    - network-bind
+    - browser-support
+    - home
+
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-setup.${ext}
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+
+mac:
+  target:
+    - dmg
+  icon: build/icon.icns
+
+npmRebuild: true
+
+electronLanguages:
+  - ar
+  - en
