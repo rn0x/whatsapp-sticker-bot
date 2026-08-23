@@ -111,3 +111,14 @@ jobs:
         run: npx electron-builder --mac dmg --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    needs: [linux-core, windows, macos, linux-flatpak, linux-snap]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Promote draft release to published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit v1.0.2 --draft=false

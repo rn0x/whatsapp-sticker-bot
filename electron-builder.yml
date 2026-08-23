@@ -34,8 +34,6 @@ publish:
   provider: github
   owner: rn0x
   repo: whatsapp-sticker-bot
-  draft: false
-  prerelease: false
 
 linux:
   target:
