@@ -17,7 +17,7 @@ try {
 
 // Chromium للنسخة المعبأة (electron-builder يجمعه عبر extraResources).
 try {
-  const script = new URL("./setup-browser.mjs", import.meta.url).pathname;
+  const script = fileURLToPath(new URL("./setup-browser.mjs", import.meta.url));
   const r = spawnSync(process.execPath, [script], { stdio: "inherit" });
   if (r.status !== 0) console.warn("[postinstall] setup-browser exited nonzero — Chrome قد يحتاج تثبيتاً يدوياً.");
 } catch (err) {
@@ -26,7 +26,7 @@ try {
 
 // wwebjs 1.34 مقابل WhatsApp Web الجديد (id._serialized -> id.$1): حقن backfill.
 try {
-  const script = new URL("./patch-wwebjs-serialized.mjs", import.meta.url).pathname;
+  const script = fileURLToPath(new URL("./patch-wwebjs-serialized.mjs", import.meta.url));
   const r = spawnSync(process.execPath, [script], { stdio: "inherit" });
   if (r.status !== 0) console.warn("[postinstall] patch-wwebjs-serialized exited nonzero.");
 } catch (err) {

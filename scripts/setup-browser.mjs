@@ -12,7 +12,9 @@ const cacheRoot = join(root, "browser", ".cache");
 mkdirSync(cacheRoot, { recursive: true });
 process.env.PUPPETEER_CACHE_DIR = cacheRoot;
 
-const cli = require.resolve("puppeteer/lib/cjs/puppeteer/node/cli.js");
+const puppeteerPkg = require("puppeteer/package.json");
+const bin = typeof puppeteerPkg.bin === "string" ? puppeteerPkg.bin : puppeteerPkg.bin.puppeteer;
+const cli = join(dirname(require.resolve("puppeteer/package.json")), bin);
 
 const { status, error } = spawnSync(
   process.execPath,
@@ -28,7 +30,7 @@ if (status !== 0) {
   console.warn(`[setup-browser] puppeteer browsers install exited ${status} — سيُستخدم chrome من path إذا وُجد.`);
 } else {
   const puppeteer = require("puppeteer");
-  const exe = puppeteer.executablePath();
+  const exe = await puppeteer.executablePath();
   console.log(`[setup-browser] Chromium ready at ${exe}`);
 }
 console.log("[setup-browser] done");
