@@ -37,7 +37,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  linux-sandboxed:
+  linux-flatpak:
     needs: test
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -48,10 +48,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: sudo apt-get update && sudo apt-get install -y flatpak flatpak-builder
+      - run: sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - run: npm ci
       - run: npm run build
-      - name: Build flatpak + snap (best-effort)
-        run: npx electron-builder --linux flatpak snap --publish always
+      - name: Build flatpak
+        run: npx electron-builder --linux flatpak --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux-snap:
+    needs: test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y snapcraft || true
+      - run: npm ci
+      - run: npm run build
+      - name: Build snap (best-effort)
+        run: npx electron-builder --linux snap --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -68,5 +87,21 @@ jobs:
       - run: npm run build
       - name: Build Windows NSIS
         run: npx electron-builder --windows nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build macOS dmg
+        run: npx electron-builder --mac dmg --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -45,7 +45,6 @@ linux:
     - tar.gz
   category: Utility
   executableName: whatsapp-sticker-bot
-  desktopName: com.wsb.stickerbot
   syncDesktopName: true
   icon: build/icons
 
