@@ -38,6 +38,7 @@
     "pack:win": "npm run build && electron-builder --windows",
     "pack:win:portable": "npm run build && electron-builder --windows portable",
     "pack:mac": "npm run build && electron-builder --mac",
+    "release": "node scripts/release.mjs",
     "packlinux": "npm run pack:linux",
     "packwin": "npm run pack:win",
     "dist": "npm run build && electron-builder",
